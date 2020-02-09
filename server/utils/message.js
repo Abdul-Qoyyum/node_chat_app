@@ -14,7 +14,7 @@ const generateMessage = (from, message) => {
 const generateLocationMessage = (from, latitude, longitude) => {
 
   return {
-  from : "Admin",
+  from,
   url : `http://www.google.com/maps?q=${latitude},${longitude}`,
   createdAt : moment(date).format("h:mm a")
   }

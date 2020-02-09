@@ -20,12 +20,20 @@ const io = sockets(server);
 io.on("connection",(socket) => {
 
 socket.on("createMessage",(msg,callback) => {
- io.emit("newMessage",generateMessage(msg.from, msg.message));
+
+  const user = users.getUser(socket.id);
+  if(user && msg.message.trim().length > 0){
+   io.to(user.room).emit("newMessage",generateMessage(user.name, msg.message));
+  }
   callback("Response from the server");
   });
+
 socket.on("createLocationMessage",coords=>{
-const {latitude, longitude } = coords;
-io.emit("generateLocationMessage",generateLocationMessage("Admin", latitude,longitude));
+  const user = users.getUser(socket.id);
+  const {latitude, longitude } = coords;
+  if(user){
+   io.to(user.room).emit("generateLocationMessage",generateLocationMessage(user.name, latitude,longitude));
+  }
  });
 
   socket.on("join",(params,callback) => {
@@ -52,9 +60,8 @@ io.emit("generateLocationMessage",generateLocationMessage("Admin", latitude,long
 
   socket.on("disconnect",() => {
     //get the current user by id
-    let user = users.getUser(socket.id);
+    let user = users.removeUser(socket.id);
 
-    users.removeUser(socket.id);
     if(user){
      socket.to(user.room).emit("newMessage",generateMessage("Admin",`${user.name} has left.`));
      socket.to(user.room).emit("updateUsersList",users.getUserList(user.room));
