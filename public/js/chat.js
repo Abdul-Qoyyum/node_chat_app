@@ -1,8 +1,16 @@
 const socket = io();
 socket.on("connect",function(){
-  console.log("A user has connected.");
+  const params = $.deparam(window.location.search);
 
-//Jquery aspect
+  socket.emit("join",params,function(err){
+   if(err){
+     alert(err);
+     window.location.href = "/";
+   }
+
+  });
+
+//wait for the dom to finish loading
 $(document).ready(function(){
  const scrollToBottom = () => {
     //selectors
@@ -20,6 +28,17 @@ if(scrollHeight + clientHeight + scrollTop + newMessageHeight + lastMessageHeigh
    messages.scrollTop(scrollHeight);
    }
   }
+
+ socket.on("updateUsersList",function(users){
+    let ol = $("<ol></ol>");
+
+    users.forEach(function(user){
+      ol.append($("<li></li>").text(user));
+     });
+
+   $("#users").html(ol);
+
+  });
 
 
 $("#messages-form").on("submit",e => {
@@ -65,18 +84,10 @@ locationButton.removeAttr("disabled").text("Send location");
 
   });
 
- });
+ });//end Jquery document ready function
 
 
 });
-
-
-/*
-const scrollBottom = () => {
-    let scrollHeight = $("#messages").prop("scrollHeight");
-    console.log(`Scrollheight : ${scrollHeight}`);
-  }
-*/
 
 
 socket.on("generateLocationMessage",function(message){
@@ -92,7 +103,6 @@ socket.on("generateLocationMessage",function(message){
 
 
 socket.on("newMessage",function(msg){
-console.log(`new Message: ${JSON.stringify(msg)}`);
   let template = $("#message-template").html();
   let html = Mustache.render(template,{
   from : msg.from,
